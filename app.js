@@ -25,6 +25,26 @@ app.get("/ping", (req, res) => res.status(200).json({ "message": "Pong" }))
 
 // add blogs
 app.post('/blog', (req, res) => {
+    // Check if the user is authenticated
+    // Check authorization header and verify the token
+    // const Authorization = req.headers.Authorization
+    // console.log("🚀 ~ app.post ~ Authorization:", Authorization)
+    const authHeader = req.headers['authorization']
+    console.log("🚀 ~ app.post ~ authHeader:", authHeader)
+
+    const token = authHeader && authHeader.split(' ')[1]
+
+    if (token == null) return res.sendStatus(401)
+
+    jwt.verify(token, process.env.TOKEN_SECRET, (err, user) => {
+        console.log(err)
+
+        if (err) return res.sendStatus(403)
+
+        req.user = user
+
+    })
+
     const body = req.body
     return res.status(201).json({ message: "Blog added successfully." })
 })
@@ -54,9 +74,25 @@ app.delete("/blog:blogId", (req, res) => {
 
 // row => replace
 // update blog
-app.put("/blog:blogId", (req, res) => {
+app.put("/blog/:blogId", (req, res) => {
+    const authHeader = req.headers['authorization']
+
+    const token = authHeader && authHeader.split(' ')[1]
+
+    if (token == null) return res.sendStatus(401)
+
+    jwt.verify(token, process.env.TOKEN_SECRET, (err, user) => {
+        console.log(err)
+
+        if (err) return res.sendStatus(403)
+
+        req.user = user
+
+    })
+
+
     const { blogId } = req.params
-    return res.status(200).json({ message: "Blog deleted successfully." })
+    return res.status(200).json({ message: "Blog updated successfully.", result: req.body })
 })
 
 app.post('/login', (req, res) => {
